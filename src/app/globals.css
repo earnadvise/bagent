@@ -1,0 +1,141 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-dark: #07080b;
+    --panel-bg: #0d0f14;
+    --panel-border: #1a1e29;
+    --panel-hover: #141824;
+    --accent-blue: #0052ff;
+    --accent-cyan: #00e5ff;
+    --accent-green: #00ff9d;
+    --accent-amber: #ffb800;
+    --text-primary: #f0f3f8;
+    --text-secondary: #8a94a6;
+    --text-dim: #4b5568;
+  }
+
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow-x: hidden;
+    selection-background-color: #0052ff;
+    selection-color: #ffffff;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #07080b;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1e2433;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2e384d;
+  }
+}
+
+/* Industrial Grid & Scanline FX */
+.bg-scanlines {
+  background: linear-gradient(
+      rgba(18, 16, 16, 0) 50%,
+      rgba(0, 0, 0, 0.3) 50%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 0, 0, 0.02),
+      rgba(0, 255, 0, 0.01),
+      rgba(0, 0, 255, 0.02)
+    );
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
+}
+
+.terminal-glow {
+  box-shadow: 0 0 25px -5px rgba(0, 82, 255, 0.15), inset 0 0 15px -5px rgba(0, 229, 255, 0.05);
+}
+
+.terminal-border-glow {
+  border-color: #1e2a4a;
+  box-shadow: 0 0 15px rgba(0, 82, 255, 0.12);
+}
+
+/* Custom marquee */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: 200%;
+  animation: marquee 35s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Custom button styles */
+.btn-industrial {
+  position: relative;
+  background: #0f121a;
+  border: 1px solid #232a3b;
+  color: #e2e8f0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.825rem;
+  letter-spacing: 0.03em;
+  transition: all 0.18s ease-in-out;
+}
+
+.btn-industrial:hover {
+  background: #171d2b;
+  border-color: #0052ff;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(0, 82, 255, 0.25);
+}
+
+.btn-filled {
+  background: #0052ff;
+  border: 1px solid #3377ff;
+  color: #ffffff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.825rem;
+  font-weight: 600;
+  transition: all 0.18s ease-in-out;
+}
+
+.btn-filled:hover {
+  background: #1a68ff;
+  border-color: #6699ff;
+  box-shadow: 0 0 18px rgba(0, 82, 255, 0.45);
+}
+
+/* Convergence diagram SVG animations */
+@keyframes dashPulse {
+  to {
+    stroke-dashoffset: -40;
+  }
+}
+
+.path-feed {
+  stroke-dasharray: 6 4;
+  animation: dashPulse 2s linear infinite;
+}
+
+.path-bus {
+  stroke-dasharray: 8 4;
+  animation: dashPulse 1.2s linear infinite;
+}
