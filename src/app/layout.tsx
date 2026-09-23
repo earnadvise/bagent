@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   icons: {
     icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%230052FF"/><text x="50" y="65" font-family="monospace" font-size="45" font-weight="bold" fill="white" text-anchor="middle">b</text></svg>',
   },
+  other: {
+    'base:app_id': '6ab3b9e7e6f916f1836acdcd',
+  },
 };
 
 export default function RootLayout({
@@ -30,6 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        <meta name="base:app_id" content="6ab3b9e7e6f916f1836acdcd" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
