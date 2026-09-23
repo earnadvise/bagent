@@ -1,6 +1,20 @@
 import { createPublicClient, http } from 'viem';
 import { base, baseSepolia } from 'viem/chains';
 
+export const BASE_BUILDER_CONFIG = {
+  builderCode: 'bc_jr1lqf3i',
+  encodedAttributionHex: '0x62635f6a72316c716633690b0080218021802180218021802180218021' as `0x${string}`,
+};
+
+/**
+ * Appends the Base ERC-8021 builder attribution suffix to any transaction calldata
+ */
+export function appendBuilderAttribution(calldata: `0x${string}` = '0x'): `0x${string}` {
+  const suffix = BASE_BUILDER_CONFIG.encodedAttributionHex.replace(/^0x/, '');
+  const baseCalldata = calldata.replace(/^0x/, '');
+  return `0x${baseCalldata}${suffix}` as `0x${string}`;
+}
+
 export const BASE_CHAIN_CONFIG = {
   mainnet: {
     id: 8453,

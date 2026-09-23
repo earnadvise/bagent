@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { ExternalLink, Layers, Activity, Cpu, ShieldCheck, Zap } from 'lucide-react';
+import { ExternalLink, Layers, Activity, Cpu, ShieldCheck, Zap, Code2, CheckCircle2 } from 'lucide-react';
+import { BASE_BUILDER_CONFIG } from '../lib/contracts';
 
 export const InfrastructureSection: React.FC = () => {
   return (
@@ -72,7 +73,7 @@ export const InfrastructureSection: React.FC = () => {
           </div>
         </article>
 
-        {/* Panel 2: On-Chain Base Telemetry */}
+        {/* Panel 2: On-Chain Base Telemetry & Builder Attribution */}
         <article className="p-6 rounded-sm bg-[#0A0C11] border border-[#1E2433] flex flex-col justify-between hover:border-[#0052FF]/40 transition-colors">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-[#1A1E29] mb-4">
@@ -90,16 +91,22 @@ export const InfrastructureSection: React.FC = () => {
             </h3>
 
             <p className="text-xs text-[#94A3B8] font-sans mb-4 leading-relaxed">
-              Real-time on-chain sequencer health, Coinbase CDP smart accounts, and cryptographic attestation feeds powering all autonomous agent runs.
+              Real-time on-chain sequencer health, Coinbase CDP smart accounts, and cryptographic builder attribution powering all autonomous agent runs.
             </p>
 
             {/* Health Matrix */}
             <div className="space-y-2 mb-6 font-mono text-xs">
               <div className="p-2.5 rounded bg-[#07090E] border border-[#181C26] flex items-center justify-between">
-                <span className="text-[#8A94A6]">Base Sequencer</span>
+                <span className="text-[#8A94A6]">Base Builder Code</span>
                 <span className="text-[#00FF9D] font-bold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#00FF9D]" />
-                  Active (2.0s blocks)
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#00FF9D]" />
+                  {BASE_BUILDER_CONFIG.builderCode} (Verified)
+                </span>
+              </div>
+              <div className="p-2.5 rounded bg-[#07090E] border border-[#181C26] flex items-center justify-between">
+                <span className="text-[#8A94A6]">ERC-8021 Attribution</span>
+                <span className="text-[#3377FF] font-mono text-[11px] truncate max-w-[180px]">
+                  {BASE_BUILDER_CONFIG.encodedAttributionHex}
                 </span>
               </div>
               <div className="p-2.5 rounded bg-[#07090E] border border-[#181C26] flex items-center justify-between">
