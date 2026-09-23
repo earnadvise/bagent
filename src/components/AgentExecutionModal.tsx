@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { AgentMission, AgentExecutionStep } from '../lib/types';
 import { generateInitialSteps, generateRandomTxHash } from '../lib/agent-runner';
-import { Terminal, Cpu, CheckCircle2, Shield, ExternalLink, X, Zap, Loader2 } from 'lucide-react';
+import { BASE_BUILDER_CONFIG } from '../lib/contracts';
+import { Terminal, Cpu, CheckCircle2, Shield, ExternalLink, X, Zap, Loader2, Send } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface AgentExecutionModalProps {
@@ -21,6 +22,8 @@ export const AgentExecutionModal: React.FC<AgentExecutionModalProps> = ({
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [txHash, setTxHash] = useState('');
+  const [isSigningOnChain, setIsSigningOnChain] = useState(false);
+  const [onChainTxError, setOnChainTxError] = useState<string | null>(null);
 
   useEffect(() => {
     const initial = generateInitialSteps(mission);
@@ -32,7 +35,7 @@ export const AgentExecutionModal: React.FC<AgentExecutionModalProps> = ({
 
   // Step runner timer
   useEffect(() => {
-    if (steps.length === 0 || isCompleted) return;
+    if (steps.length === 0 || isCompleted || isSigningOnChain) return;
 
     const timer = setTimeout(() => {
       setSteps((prevSteps) => {
@@ -56,16 +59,62 @@ export const AgentExecutionModal: React.FC<AgentExecutionModalProps> = ({
             origin: { y: 0.6 },
             colors: ['#0052FF', '#00E5FF', '#00FF9D'],
           });
-        } catch {
-          // ignore if canvas not supported
-        }
+        } catch {}
       } else {
         setCurrentStepIndex((prev) => prev + 1);
       }
     }, 2400);
 
     return () => clearTimeout(timer);
-  }, [currentStepIndex, steps.length, isCompleted, mission.id, mission.rewardXp, onMissionSuccess]);
+  }, [currentStepIndex, steps.length, isCompleted, isSigningOnChain, mission.id, mission.rewardXp, onMissionSuccess]);
+
+  // Execute a real on-chain transaction directly from user's connected wallet
+  const handleSignRealTransaction = async () => {
+    if (typeof window === 'undefined' || !(window as any).ethereum) {
+      setOnChainTxError('Please connect a Web3 wallet (MetaMask / Coinbase / Rabby) to broadcast on Base.');
+      return;
+    }
+
+    try {
+      setIsSigningOnChain(true);
+      setOnChainTxError(null);
+      const eth = (window as any).ethereum;
+
+      const accounts: string[] = await eth.request({ method: 'eth_requestAccounts' });
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No wallet accounts available.');
+      }
+      const userAddress = accounts[0];
+
+      const hash: string = await eth.request({
+        method: 'eth_sendTransaction',
+        params: [
+          {
+            from: userAddress,
+            to: mission.targetContract || userAddress,
+            value: '0x0',
+            data: BASE_BUILDER_CONFIG.encodedAttributionHex,
+          },
+        ],
+      });
+
+      setTxHash(hash);
+      setIsCompleted(true);
+      onMissionSuccess(mission.id, mission.rewardXp);
+      try {
+        confetti({
+          particleCount: 100,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ['#0052FF', '#00E5FF', '#00FF9D'],
+        });
+      } catch {}
+    } catch (err: any) {
+      setOnChainTxError(err?.message || 'Transaction was rejected.');
+    } finally {
+      setIsSigningOnChain(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
@@ -170,13 +219,40 @@ export const AgentExecutionModal: React.FC<AgentExecutionModalProps> = ({
             })}
           </div>
 
+          {/* Broadcast Real On-Chain TX Callout */}
+          {!isCompleted && (
+            <div className="p-3.5 rounded-sm bg-[#0E121D] border border-[#0052FF]/40 mb-5 flex items-center justify-between gap-4 font-mono text-xs">
+              <div className="text-[#8A94A6]">
+                Want to sign with your connected wallet instead?
+              </div>
+              <button
+                onClick={handleSignRealTransaction}
+                disabled={isSigningOnChain}
+                className="btn-industrial px-3.5 py-1.5 rounded-sm text-xs font-mono font-semibold text-[#00E5FF] hover:bg-[#0052FF]/20 flex items-center gap-1.5 shrink-0"
+              >
+                {isSigningOnChain ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Send className="w-3.5 h-3.5" />
+                )}
+                <span>Sign On Base Wallet</span>
+              </button>
+            </div>
+          )}
+
+          {onChainTxError && (
+            <div className="p-2.5 rounded bg-[#FF3366]/10 border border-[#FF3366]/30 text-xs font-mono text-[#FF3366] mb-5">
+              {onChainTxError}
+            </div>
+          )}
+
           {/* On-Chain Base Proof Card */}
           {isCompleted && (
             <div className="p-4 rounded-sm bg-[#00FF9D]/10 border border-[#00FF9D]/40 space-y-2 mb-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs font-mono font-bold text-[#00FF9D]">
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>MISSION EXECUTED & VERIFIED ON BASE</span>
+                  <span>MISSION EXECUTED &amp; VERIFIED ON BASE</span>
                 </div>
                 <span className="text-[10px] font-mono text-[#00FF9D] bg-[#00FF9D]/20 px-2 py-0.5 rounded">
                   CONFIRMED
@@ -205,7 +281,7 @@ export const AgentExecutionModal: React.FC<AgentExecutionModalProps> = ({
                 onClick={onClose}
                 className="btn-filled px-6 py-2 rounded-sm text-xs font-mono font-bold"
               >
-                Claim XP & Close
+                Claim XP &amp; Close
               </button>
             ) : (
               <div className="flex items-center gap-2 text-xs font-mono text-[#8A94A6]">

@@ -2,7 +2,9 @@
 
 import React, { useState } from 'react';
 import { WalletStanding, ContributionGroup } from '../lib/types';
-import { Shield, CheckCircle2, AlertCircle, Clock, Search, ArrowRight, Zap, RefreshCw } from 'lucide-react';
+import { BASE_BUILDER_CONFIG } from '../lib/contracts';
+import { Shield, CheckCircle2, AlertCircle, Clock, Search, ArrowRight, Zap, RefreshCw, Send, ExternalLink, Loader2 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 interface PositionCheckerProps {
   standing: WalletStanding;
@@ -20,10 +22,63 @@ export const PositionChecker: React.FC<PositionCheckerProps> = ({
   onNavigateToMissions,
 }) => {
   const [selectedGroup, setSelectedGroup] = useState<ContributionGroup | null>(null);
+  const [isTransacting, setIsTransacting] = useState(false);
+  const [realTxHash, setRealTxHash] = useState<string | null>(null);
+  const [txError, setTxError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onCheckPosition();
+  };
+
+  // Execute a real on-chain transaction on Base to record activity with Builder Code attribution
+  const handleRecordOnChainActivity = async () => {
+    if (typeof window === 'undefined' || !(window as any).ethereum) {
+      setTxError('Please connect MetaMask, Coinbase Wallet, or Rabby to sign on-chain transactions on Base.');
+      return;
+    }
+
+    try {
+      setIsTransacting(true);
+      setTxError(null);
+      const eth = (window as any).ethereum;
+
+      const accounts: string[] = await eth.request({ method: 'eth_requestAccounts' });
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No wallet accounts available.');
+      }
+      const userAddress = accounts[0];
+
+      // Send 0 ETH transaction to self/activity registry with Base Builder attribution hex
+      const txParams = {
+        from: userAddress,
+        to: userAddress,
+        value: '0x0',
+        data: BASE_BUILDER_CONFIG.encodedAttributionHex,
+      };
+
+      const hash: string = await eth.request({
+        method: 'eth_sendTransaction',
+        params: [txParams],
+      });
+
+      setRealTxHash(hash);
+      try {
+        confetti({
+          particleCount: 70,
+          spread: 60,
+          origin: { y: 0.6 },
+          colors: ['#0052FF', '#00E5FF', '#00FF9D'],
+        });
+      } catch {}
+
+      // Refresh standing check
+      onCheckPosition();
+    } catch (err: any) {
+      setTxError(err?.message || 'Transaction rejected or failed.');
+    } finally {
+      setIsTransacting(false);
+    }
   };
 
   const getStatusBadge = (status: ContributionGroup['status']) => {
@@ -102,6 +157,63 @@ export const PositionChecker: React.FC<PositionCheckerProps> = ({
           </button>
         </div>
       </form>
+
+      {/* Real On-Chain Transact Action Banner */}
+      <div className="p-4 rounded-sm bg-[#0D111A] border border-[#0052FF]/50 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg shadow-[#0052FF]/10">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-xs font-mono font-bold text-[#00E5FF]">
+            <Send className="w-4 h-4 text-[#0052FF]" />
+            <span>RECORD REAL ON-CHAIN ACTIVITY (BASE L2)</span>
+          </div>
+          <p className="text-xs text-[#94A3B8] font-sans">
+            Broadcast an on-chain activity attestation with your connected wallet to accumulate verified Base Builder points (Code: <code className="text-[#00FF9D]">{BASE_BUILDER_CONFIG.builderCode}</code>).
+          </p>
+        </div>
+
+        <button
+          onClick={handleRecordOnChainActivity}
+          disabled={isTransacting}
+          className="btn-filled px-5 py-2.5 rounded-sm text-xs font-mono font-bold shrink-0 flex items-center gap-2 shadow-md shadow-[#0052FF]/30"
+        >
+          {isTransacting ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Broadcasting to Base...</span>
+            </>
+          ) : (
+            <>
+              <Zap className="w-3.5 h-3.5 text-white" />
+              <span>Transact on Base</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Real Transaction Result */}
+      {realTxHash && (
+        <div className="p-3.5 rounded-sm bg-[#00FF9D]/10 border border-[#00FF9D]/40 mb-6 font-mono text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-[#00FF9D] font-bold">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Activity Confirmed on Base Block!</span>
+          </div>
+          <a
+            href={`https://basescan.org/tx/${realTxHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#3377FF] hover:underline flex items-center gap-1"
+          >
+            <span>View TX: {realTxHash.substring(0, 12)}...{realTxHash.substring(realTxHash.length - 8)}</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      )}
+
+      {txError && (
+        <div className="p-3 rounded bg-[#FF3366]/10 border border-[#FF3366]/30 text-xs font-mono text-[#FF3366] mb-6 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{txError}</span>
+        </div>
+      )}
 
       {/* Metrics Key-Value Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 mb-6">
