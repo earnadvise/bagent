@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ArrowUpRight } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
@@ -35,7 +35,7 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Links */}
+          {/* Links without any X/Twitter */}
           <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-mono text-[#8A94A6]">
             <a
               href="#b04"
@@ -49,8 +49,8 @@ export const Footer: React.FC = () => {
             <a href="https://aerodrome.finance" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
               Aerodrome
             </a>
-            <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-              X
+            <a href="https://basescan.org" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+              BaseScan
             </a>
           </div>
 
